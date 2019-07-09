@@ -12,6 +12,7 @@ import datetime
 import time
 import requests
 import xml.etree.ElementTree as ET
+from defusedxml.ElementTree import XMLfromstring
 import os
 import math
 import six
@@ -336,7 +337,7 @@ class Client(object):
         self._capabilities = None
         self._version = None
 
-    def login(self, user_id, password):
+    async def login(self, user_id, password):
         """Authenticate to ownCloud.
         This will create a session on the server.
 
@@ -350,7 +351,7 @@ class Client(object):
         self._session.auth = (user_id, password)
 
         try:
-            self._update_capabilities()
+            await self._update_capabilities()
 
             url_components = parse.urlparse(self.url)
             if self._dav_endpoint_version == 1:
@@ -662,7 +663,7 @@ class Client(object):
             'remote_shares/pending'
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             shares = []
             for element in tree.find('data').iter('element'):
@@ -833,7 +834,7 @@ class Client(object):
             data=post_data
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             data_el = tree.find('data')
             return ShareInfo(
@@ -881,7 +882,7 @@ class Client(object):
                 'shares/' + str(share_id)
                 )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             return self._get_shareinfo(tree.find('data').find('element'))
         raise HTTPResponseError(res)
@@ -928,7 +929,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             shares = []
             for element in tree.find('data').iter('element'):
@@ -962,7 +963,7 @@ class Client(object):
 
         # We get 200 when the user was just created.
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return True
 
@@ -1021,7 +1022,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             users = [x.text for x in tree.findall('data/users/element')]
 
             return users
@@ -1057,7 +1058,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return True
         raise HTTPResponseError(res)
@@ -1080,7 +1081,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return True
 
@@ -1102,7 +1103,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return [group.text for group in tree.find('data/groups')]
 
@@ -1133,7 +1134,7 @@ class Client(object):
             data={}
         )
 
-        tree = ET.fromstring(res.content)
+        tree = XMLfromstring(res.content)
         self._check_ocs_status(tree)
         # <ocs><meta><statuscode>100</statuscode><status>ok</status></meta>
         # <data>
@@ -1161,7 +1162,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return True
 
@@ -1185,7 +1186,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100, 103])
             return True
 
@@ -1207,7 +1208,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
 
             groups = tree.find('data')
@@ -1268,7 +1269,7 @@ class Client(object):
             print('OCS share_file request for file %s with permissions %i '
                   'returned: %i' % (path, perms, res.status_code))
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             data_el = tree.find('data')
             return ShareInfo(
@@ -1298,7 +1299,7 @@ class Client(object):
 
         # We get 200 when the group was just created.
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return True
 
@@ -1340,7 +1341,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             groups = [x.text for x in tree.findall('data/groups/element')]
 
             return groups
@@ -1363,7 +1364,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, [100])
             return [group.text for group in tree.find('data/users')]
 
@@ -1385,7 +1386,7 @@ class Client(object):
         )
 
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
 
             for code_el in tree.findall('data/groups/element'):
                 if code_el is not None and code_el.text == group_name:
@@ -1425,7 +1426,7 @@ class Client(object):
             data=post_data
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             data_el = tree.find('data')
             return ShareInfo(
@@ -1451,7 +1452,7 @@ class Client(object):
             path
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             values = []
 
@@ -1487,7 +1488,7 @@ class Client(object):
             path
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             values = []
             for element in tree.find('data').iter('element'):
@@ -1525,7 +1526,7 @@ class Client(object):
             data={'value': self._encode_string(value)}
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             return True
         raise HTTPResponseError(res)
@@ -1546,7 +1547,7 @@ class Client(object):
             path
         )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
             return True
         raise HTTPResponseError(res)
@@ -1562,7 +1563,7 @@ class Client(object):
         res = self._make_ocs_request('GET', self.OCS_SERVICE_CLOUD, 'apps')
         if res.status_code != 200:
             raise HTTPResponseError(res)
-        tree = ET.fromstring(res.content)
+        tree = XMLfromstring(res.content)
         self._check_ocs_status(tree)
         # <data><apps><element>files</element><element>activity</element> ...
         for el in tree.findall('data/apps/element'):
@@ -1572,7 +1573,7 @@ class Client(object):
                                      'apps?filter=enabled')
         if res.status_code != 200:
             raise HTTPResponseError(res)
-        tree = ET.fromstring(res.content)
+        tree = XMLfromstring(res.content)
         self._check_ocs_status(tree)
         for el in tree.findall('data/apps/element'):
             ena_apps[el.text] = True
@@ -1685,13 +1686,13 @@ class Client(object):
 
         res = self._make_ocs_request(method, service, action, **kwargs)
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree, accepted_codes=accepted_codes)
             return res
 
         raise OCSResponseError(res)
 
-    def _make_ocs_request(self, method, service, action, **kwargs):
+    async def _make_ocs_request(self, method, service, action, **kwargs):
         """Makes a OCS API request
 
         :param method: HTTP method
@@ -1713,13 +1714,13 @@ class Client(object):
         attributes['headers']['OCS-APIREQUEST'] = 'true'
 
         if self._debug:
-            print('OCS request: %s %s %s' % (method, self.url + path,
+            logging.debug('OCS request: %s %s %s' % (method, self.url + path,
                                              attributes))
 
-        res = self._session.request(method, self.url + path, **attributes)
+        res = await self._session.request(method, self.url + path, **attributes)
         return res
 
-    def _make_dav_request(self, method, path, **kwargs):
+    async def _make_dav_request(self, method, path, **kwargs):
         """Makes a WebDAV request
 
         :param method: HTTP method
@@ -1730,12 +1731,12 @@ class Client(object):
         if it didn't
         """
         if self._debug:
-            print('DAV request: %s %s' % (method, path))
+            logging.debug('DAV request: %s %s' % (method, path))
             if kwargs.get('headers'):
-                print('Headers: ', kwargs.get('headers'))
+                logging.debug('Headers: ', kwargs.get('headers'))
 
         path = self._normalize_path(path)
-        res = self._session.request(
+        res = await self._session.request(
             method,
             self._webdav_url + parse.quote(self._encode_string(path)),
             **kwargs
@@ -1756,7 +1757,7 @@ class Client(object):
         the operation did not succeed
         """
         if res.status_code == 207:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             items = []
             for child in tree:
                 items.append(self._parse_dav_element(child))
@@ -1858,14 +1859,14 @@ class Client(object):
             return None
         return ShareInfo(self._xml_to_dict(data_el))
 
-    def _update_capabilities(self):
-        res = self._make_ocs_request(
+    async def _update_capabilities(self):
+        res = await self._make_ocs_request(
                 'GET',
                 self.OCS_SERVICE_CLOUD,
                 'capabilities'
                 )
         if res.status_code == 200:
-            tree = ET.fromstring(res.content)
+            tree = XMLfromstring(res.content)
             self._check_ocs_status(tree)
 
             data_el = tree.find('data')
